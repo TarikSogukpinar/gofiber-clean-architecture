@@ -15,18 +15,18 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepository repository.UserRepository
 }
 
 func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{
-		userRepo: repo,
+		userRepository: repo,
 	}
 }
 
 func (s *userService) RegisterUser(ctx context.Context, username, email, password string) error {
 	// Check if the email is already registered
-	existingUser, err := s.userRepo.FindByEmail(ctx, email)
+	existingUser, err := s.userRepository.FindByEmail(ctx, email)
 	if err == nil && existingUser != nil {
 		return errors.New("email already registered")
 	}
@@ -43,11 +43,11 @@ func (s *userService) RegisterUser(ctx context.Context, username, email, passwor
 		Password: string(hashedPassword),
 	}
 
-	return s.userRepo.Create(ctx, user)
+	return s.userRepository.Create(ctx, user)
 }
 
 func (s *userService) LoginUser(ctx context.Context, email, password string) (*model.User, error) {
-	user, err := s.userRepo.FindByEmail(ctx, email)
+	user, err := s.userRepository.FindByEmail(ctx, email)
 	if err != nil || user == nil {
 		return nil, errors.New("invalid email or password")
 	}

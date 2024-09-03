@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"fmt"
 	"gofiber-clean-architecture/model"
 	"gofiber-clean-architecture/service"
+	"gofiber-clean-architecture/validators"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -29,8 +31,15 @@ func (controller *UserController) Register(c *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
+	// Validasyon işlemi
+	if err := validators.ValidateStruct(request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
 
-	err := controller.userService.RegisterUser(c.Context(), request.Email, request.Password, "")
+	err := controller.userService.RegisterUser(c.Context(), request.Username, request.Email, request.Password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -43,6 +52,7 @@ func (controller *UserController) Register(c *fiber.Ctx) error {
 }
 
 func (controller *UserController) Login(c *fiber.Ctx) error {
+	fmt.Println("Login user")
 	var request model.User
 	if err := c.BodyParser(&request); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -50,12 +60,23 @@ func (controller *UserController) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := controller.userService.LoginUser(c.Context(), request.Email, request.Password)
-	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid username or password",
+	if err := validators.ValidateStruct(request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(user)
+	user, err := controller.userService.LoginUser(c.Context(), request.Email, request.Password)
+
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid username or passworddd",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User registered successfully",
+		"user":    user,
+	})
 }

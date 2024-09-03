@@ -46,7 +46,6 @@ func Connect() error {
 	}
 
 	UserCollection = db.Collection("users")
-	// BookCollection = db.Collection("books")
 
 	fmt.Println("Connected to MongoDB!")
 	return nil
