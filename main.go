@@ -1,7 +1,12 @@
 package main
 
 import (
-	"gofiber-clean-architecture/configuration"
+	"context"
+	config "gofiber-clean-architecture/configuration"
+	"gofiber-clean-architecture/database"
+	"gofiber-clean-architecture/handler"
+	"gofiber-clean-architecture/repository"
+	"gofiber-clean-architecture/service"
 	"log"
 	"os"
 
@@ -9,12 +14,25 @@ import (
 )
 
 func main() {
-	config := configuration.New()
+	config.LoadConfig()
+
+	if err := database.Connect(); err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := database.Mg.Client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	// Setup repositories, services, and handlers
+	userRepo := repository.NewUserRepository(database.UserCollection.Database())
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
 	app := fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World! Go Fiber")
-	})
+	userHandler.RegisterRoutes(app)
 
 	port := os.Getenv("PORT")
 	if port == "" {
