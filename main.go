@@ -5,6 +5,7 @@ import (
 	config "gofiber-clean-architecture/configuration"
 	"gofiber-clean-architecture/database"
 	"gofiber-clean-architecture/handler"
+	"gofiber-clean-architecture/middleware"
 	"gofiber-clean-architecture/repository"
 	"gofiber-clean-architecture/service"
 	"log"
@@ -38,6 +39,8 @@ func main() {
 	if port == "" {
 		port = "6060" // Default port
 	}
+
+	app.Use(middleware.JWTMiddleware(os.Getenv("JWT_SECRET")))
 
 	log.Fatal(app.Listen(":" + port))
 }
